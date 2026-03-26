@@ -1,0 +1,13 @@
+[Unit]
+Description=WiFi GPIO jumper check
+After=network-pre.target
+Before=network.target
+Wants=network-pre.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/wifi-gpio.sh
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

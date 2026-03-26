@@ -1,0 +1,41 @@
+# PiProxy Configuration
+# Copy this file to config.yml and fill in your values.
+
+# --- Network ---
+
+# eth0 (built-in gigabit) — client-facing
+eth0_ip: "192.168.1.1"
+eth0_netmask: "255.255.255.0"
+
+# eth1 (USB gigabit dongle) — PDU-facing
+eth1_ip: "10.0.0.1"
+eth1_netmask: "255.255.255.0"
+
+# DHCP server (served on eth1)
+dhcp_range_start: "10.0.0.10"
+dhcp_range_end: "10.0.0.50"
+dhcp_lease_time: "24h"
+
+# --- WiFi (management access) ---
+wifi_ssid: "MyNetwork"
+wifi_password: "MyPassword"
+wifi_country: "US"
+
+# --- Pi User Account ---
+pi_username: "admin"
+pi_password: "changeme"
+
+# --- TLS Proxy (HTTPS) ---
+# Paths relative to this project root
+tls_cert_path: "certs/server.crt"
+tls_key_path: "certs/server.key"
+pdu_https_port: 443
+
+# --- SSH Gateway ---
+pdu_ssh_user: "admin"
+pdu_ssh_password: "admin"
+pdu_ssh_port: 22
+
+# --- GPIO ---
+# GPIO pin for WiFi enable/disable jumper (BCM numbering)
+wifi_gpio_pin: 17

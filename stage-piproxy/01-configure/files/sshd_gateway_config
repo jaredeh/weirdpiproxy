@@ -1,0 +1,19 @@
+# SSH Gateway — eth0:22 — forwards to Eaton PDU
+Port 22
+ListenAddress %%ETH0_IP%%
+
+PermitRootLogin no
+PubkeyAuthentication yes
+PasswordAuthentication no
+
+AuthorizedKeysFile .ssh/authorized_keys
+
+ForceCommand /usr/local/bin/ssh-bridge.sh
+
+PidFile /run/sshd_gateway.pid
+HostKey /etc/ssh/ssh_host_ed25519_key
+HostKey /etc/ssh/ssh_host_rsa_key
+
+UsePAM yes
+PrintMotd no
+AcceptEnv LANG LC_*

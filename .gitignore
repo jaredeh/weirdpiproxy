@@ -1,0 +1,8 @@
+config.yml
+certs/*.crt
+certs/*.key
+certs/*.pem
+pi-gen/
+build/
+*.img
+*.zip

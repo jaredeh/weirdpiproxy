@@ -1,0 +1,11 @@
+[Unit]
+Description=OpenSSH Gateway (PDU proxy on eth0:22)
+After=network.target
+
+[Service]
+ExecStart=/usr/sbin/sshd -D -f /etc/ssh/sshd_config_gateway
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

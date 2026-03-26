@@ -1,0 +1,24 @@
+# Management SSH — Pi shell access
+# Accessible on all interfaces at port 2222
+# On eth0: ssh -p 2222 admin@<eth0_ip>
+# On wlan0: ssh -p 2222 admin@<wlan0_ip>
+# Firewall restricts which interfaces can reach this.
+
+Port 2222
+ListenAddress 0.0.0.0
+
+PermitRootLogin no
+PubkeyAuthentication yes
+PasswordAuthentication yes
+
+AuthorizedKeysFile .ssh/authorized_keys
+
+PidFile /run/sshd_management.pid
+HostKey /etc/ssh/ssh_host_ed25519_key
+HostKey /etc/ssh/ssh_host_rsa_key
+
+UsePAM yes
+PrintMotd yes
+AcceptEnv LANG LC_*
+
+Subsystem sftp /usr/lib/openssh/sftp-server
