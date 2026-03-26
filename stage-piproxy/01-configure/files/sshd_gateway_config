@@ -1,6 +1,7 @@
 # SSH Gateway — eth0:22 — forwards to Eaton PDU
 Port 22
 ListenAddress %%ETH0_IP%%
+%%VLAN_SSHD_LISTEN%%
 
 PermitRootLogin no
 PubkeyAuthentication yes

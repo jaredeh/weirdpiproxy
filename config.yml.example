@@ -7,6 +7,15 @@
 eth0_ip: "192.168.1.1"
 eth0_netmask: "255.255.255.0"
 
+# Optional VLANs on eth0 (same services as eth0: HTTPS proxy, SSH gateway, management SSH)
+# eth0_vlans:
+#   - id: 100
+#     ip: "192.168.100.1"
+#     netmask: "255.255.255.0"
+#   - id: 200
+#     ip: "192.168.200.1"
+#     netmask: "255.255.255.0"
+
 # eth1 (USB gigabit dongle) — PDU-facing
 eth1_ip: "10.0.0.1"
 eth1_netmask: "255.255.255.0"

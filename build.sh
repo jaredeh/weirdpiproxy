@@ -119,6 +119,28 @@ process_templates() {
     cp "${SCRIPT_DIR}/${TLS_CERT_PATH}" "${BUILD_STAGE_DIR}/01-configure/files/server.crt"
     cp "${SCRIPT_DIR}/${TLS_KEY_PATH}" "${BUILD_STAGE_DIR}/01-configure/files/server.key"
 
+    # Generate VLAN config snippets
+    local vlan_dhcpcd="" vlan_nginx="" vlan_sshd="" vlan_nftables=""
+    local vlan_count
+    vlan_count=$(yq -r '.eth0_vlans | length // 0' "$CONFIG_FILE" 2>/dev/null || echo 0)
+
+    if [ "$vlan_count" -gt 0 ]; then
+        for i in $(seq 0 $((vlan_count - 1))); do
+            local vid ip mask cidr
+            vid=$(yq -r ".eth0_vlans[$i].id" "$CONFIG_FILE")
+            ip=$(yq -r ".eth0_vlans[$i].ip" "$CONFIG_FILE")
+            mask=$(yq -r ".eth0_vlans[$i].netmask" "$CONFIG_FILE")
+            cidr=$(netmask_to_cidr "$mask")
+
+            vlan_dhcpcd+="interface eth0.${vid}\nstatic ip_address=${ip}/${cidr}\nnolink\n\n"
+            vlan_nginx+="    listen ${ip}:443 ssl;\n"
+            vlan_sshd+="ListenAddress ${ip}\n"
+            vlan_nftables+="        iifname \"eth0.${vid}\" tcp dport 443 accept\n"
+            vlan_nftables+="        iifname \"eth0.${vid}\" tcp dport 22 accept\n"
+            vlan_nftables+="        iifname \"eth0.${vid}\" tcp dport 2222 accept\n"
+        done
+    fi
+
     # Substitute all %%VARIABLE%% placeholders in build stage files
     local replacements=(
         "%%ETH0_IP%%:${ETH0_IP}"
@@ -147,6 +169,22 @@ process_templates() {
             sed -i "s|${placeholder}|${value}|g" "$file"
         done
     done
+
+    # Substitute VLAN placeholders (multiline content)
+    local files_dir="${BUILD_STAGE_DIR}/01-configure/files"
+    replace_placeholder() {
+        local file="$1" placeholder="$2" content="$3"
+        local tmpfile="${file}.tmp"
+        awk -v pat="$placeholder" -v rep="$content" '{
+            idx = index($0, pat)
+            if (idx > 0) { printf "%s%s%s\n", substr($0,1,idx-1), rep, substr($0,idx+length(pat)) }
+            else { print }
+        }' "$file" > "$tmpfile" && mv "$tmpfile" "$file"
+    }
+    replace_placeholder "${files_dir}/dhcpcd-static.conf" "%%VLAN_DHCPCD%%" "$(echo -e "$vlan_dhcpcd")"
+    replace_placeholder "${files_dir}/nginx-pdu.conf" "%%VLAN_NGINX_LISTEN%%" "$(echo -e "$vlan_nginx")"
+    replace_placeholder "${files_dir}/sshd_gateway_config" "%%VLAN_SSHD_LISTEN%%" "$(echo -e "$vlan_sshd")"
+    replace_placeholder "${files_dir}/nftables.conf" "%%VLAN_NFTABLES%%" "$(echo -e "$vlan_nftables")"
 }
 
 # --- pi-gen setup ---

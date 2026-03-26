@@ -34,3 +34,8 @@ install -m 600 files/wpa_supplicant.conf "${ROOTFS_DIR}/etc/wpa_supplicant/wpa_s
 
 # --- Firewall ---
 install -m 644 files/nftables.conf "${ROOTFS_DIR}/etc/nftables.conf"
+
+# --- VLAN support (8021q module) ---
+if ! grep -q '^8021q' "${ROOTFS_DIR}/etc/modules" 2>/dev/null; then
+    echo '8021q' >> "${ROOTFS_DIR}/etc/modules"
+fi
