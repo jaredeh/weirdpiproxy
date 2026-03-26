@@ -120,7 +120,7 @@ process_templates() {
     cp "${SCRIPT_DIR}/${TLS_KEY_PATH}" "${BUILD_STAGE_DIR}/01-configure/files/server.key"
 
     # Generate VLAN config snippets
-    local vlan_dhcpcd="" vlan_nginx="" vlan_sshd="" vlan_nftables=""
+    local vlan_nginx="" vlan_sshd="" vlan_nftables=""
     local vlan_count
     vlan_count=$(yq -r '.eth0_vlans | length // 0' "$CONFIG_FILE" 2>/dev/null || echo 0)
 
@@ -132,7 +132,25 @@ process_templates() {
             mask=$(yq -r ".eth0_vlans[$i].netmask" "$CONFIG_FILE")
             cidr=$(netmask_to_cidr "$mask")
 
-            vlan_dhcpcd+="interface eth0.${vid}\nstatic ip_address=${ip}/${cidr}\nnolink\n\n"
+            # Generate NM connection file for this VLAN
+            cat > "${BUILD_STAGE_DIR}/01-configure/files/vlan-${vid}.nmconnection" <<VLANEOF
+[connection]
+id=eth0-vlan${vid}
+type=vlan
+autoconnect=true
+
+[vlan]
+parent=eth0
+id=${vid}
+
+[ipv4]
+method=manual
+addresses=${ip}/${cidr}
+
+[ipv6]
+method=disabled
+VLANEOF
+
             vlan_nginx+="    listen ${ip}:443 ssl;\n"
             vlan_sshd+="ListenAddress ${ip}\n"
             vlan_nftables+="        iifname \"eth0.${vid}\" tcp dport 443 accept\n"
@@ -181,7 +199,6 @@ process_templates() {
             else { print }
         }' "$file" > "$tmpfile" && mv "$tmpfile" "$file"
     }
-    replace_placeholder "${files_dir}/dhcpcd-static.conf" "%%VLAN_DHCPCD%%" "$(echo -e "$vlan_dhcpcd")"
     replace_placeholder "${files_dir}/nginx-pdu.conf" "%%VLAN_NGINX_LISTEN%%" "$(echo -e "$vlan_nginx")"
     replace_placeholder "${files_dir}/sshd_gateway_config" "%%VLAN_SSHD_LISTEN%%" "$(echo -e "$vlan_sshd")"
     replace_placeholder "${files_dir}/nftables.conf" "%%VLAN_NFTABLES%%" "$(echo -e "$vlan_nftables")"
@@ -209,6 +226,8 @@ TARGET_HOSTNAME=piproxy
 FIRST_USER_NAME=${PI_USERNAME}
 FIRST_USER_PASS=${PI_PASSWORD}
 ENABLE_SSH=1
+DISABLE_FIRST_BOOT_USER_RENAME=1
+WPA_COUNTRY=${WIFI_COUNTRY}
 LOCALE_DEFAULT=en_US.UTF-8
 KEYBOARD_KEYMAP=us
 TIMEZONE_DEFAULT=UTC
@@ -269,6 +288,15 @@ run_build() {
             echo "Flash with: dd if=${output_name} of=/dev/sdX bs=4M status=progress"
         fi
         echo "========================================="
+
+        # Flash directly if a block device was specified
+        if [ -n "${FLASH_DEV:-}" ]; then
+            echo ""
+            echo "Flashing to ${FLASH_DEV}..."
+            sudo dd if="${SCRIPT_DIR}/${output_name}" of="${FLASH_DEV}" bs=512k oflag=direct status=progress
+            sync
+            echo "Flash complete."
+        fi
     else
         echo "ERROR: Build completed but no image found in pi-gen/deploy/"
         exit 1
@@ -300,6 +328,16 @@ main() {
         clean) clean; exit 0 ;;
         distclean) distclean; exit 0 ;;
     esac
+
+    # Check for block device argument
+    if [ -n "${1:-}" ]; then
+        if [ -b "$1" ]; then
+            FLASH_DEV="$1"
+        else
+            echo "ERROR: $1 is not a block device"
+            exit 1
+        fi
+    fi
 
     echo "=== PiProxy Image Builder ==="
     echo ""

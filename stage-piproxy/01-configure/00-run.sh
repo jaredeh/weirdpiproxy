@@ -1,8 +1,14 @@
 #!/bin/bash -e
 # Runs on the host with access to ${ROOTFS_DIR}
 
-# --- Network configuration (static IPs for eth0 and eth1) ---
-install -m 644 files/dhcpcd-static.conf "${ROOTFS_DIR}/etc/dhcpcd.conf"
+# --- Network configuration (NetworkManager connections) ---
+install -d "${ROOTFS_DIR}/etc/NetworkManager/system-connections"
+install -m 600 files/eth0.nmconnection "${ROOTFS_DIR}/etc/NetworkManager/system-connections/eth0-static.nmconnection"
+install -m 600 files/eth1.nmconnection "${ROOTFS_DIR}/etc/NetworkManager/system-connections/eth1-static.nmconnection"
+# Install any VLAN connection files
+for f in files/vlan-*.nmconnection; do
+    [ -f "$f" ] && install -m 600 "$f" "${ROOTFS_DIR}/etc/NetworkManager/system-connections/$(basename "$f")"
+done
 
 # --- nginx ---
 install -d "${ROOTFS_DIR}/etc/nginx/certs"
@@ -29,13 +35,9 @@ install -m 755 files/pdu-lease-hook.sh "${ROOTFS_DIR}/usr/local/bin/pdu-lease-ho
 install -m 755 files/wifi-gpio.sh "${ROOTFS_DIR}/usr/local/bin/wifi-gpio.sh"
 install -m 644 files/wifi-gpio.service "${ROOTFS_DIR}/etc/systemd/system/wifi-gpio.service"
 
-# --- WiFi (wpa_supplicant) ---
-install -m 600 files/wpa_supplicant.conf "${ROOTFS_DIR}/etc/wpa_supplicant/wpa_supplicant.conf"
+# --- WiFi (NetworkManager connection) ---
+install -m 600 files/wifi.nmconnection "${ROOTFS_DIR}/etc/NetworkManager/system-connections/piproxy-wifi.nmconnection"
 
 # --- Firewall ---
 install -m 644 files/nftables.conf "${ROOTFS_DIR}/etc/nftables.conf"
 
-# --- VLAN support (8021q module) ---
-if ! grep -q '^8021q' "${ROOTFS_DIR}/etc/modules" 2>/dev/null; then
-    echo '8021q' >> "${ROOTFS_DIR}/etc/modules"
-fi

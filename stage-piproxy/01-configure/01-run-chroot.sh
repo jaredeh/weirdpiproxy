@@ -11,4 +11,3 @@ systemctl enable nginx.service
 systemctl enable dnsmasq.service
 systemctl enable nftables.service
 systemctl enable wifi-gpio.service
-systemctl enable wpa_supplicant.service
