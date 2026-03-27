@@ -120,3 +120,4 @@ All settings are in `config.yml`. See `config.yml.example` for the full template
 - USB Gigabit Ethernet adapter (for the PDU-facing network)
 - SD card (8GB+)
 - Optional: 2-pin jumper for GPIO17 WiFi toggle
+- 128x64 0.92" OLED i2c display

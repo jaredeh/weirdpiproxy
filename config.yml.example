@@ -48,3 +48,10 @@ pdu_ssh_port: 22
 # --- GPIO ---
 # GPIO pin for WiFi enable/disable jumper (BCM numbering)
 wifi_gpio_pin: 17
+
+# For certs/generate.sh, grabs from Vault/OpenBao
+# # --- certs ---
+# vault_selfsignedcert_crt: "infra/selfsigned_cert/crt"
+# vault_selfsignedcert_key: "infra/selfsigned_cert/key"
+# vault_selfsignedcert_filename: localdomain
+# vault_selfsignedcert_domain: localdomain.local
