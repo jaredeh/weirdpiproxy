@@ -1,13 +1,12 @@
 #!/bin/bash -e
 # Runs inside the chroot — enable/disable services
 
-# Disable the default sshd (we run our own two instances)
-systemctl disable ssh.service 2>/dev/null || true
-
-# Enable our services
+# Default ssh.service uses /etc/ssh/sshd_config (our management config) — keep it enabled
+# Add our gateway sshd as a separate service
 systemctl enable sshd-gateway.service
-systemctl enable sshd-management.service
 systemctl enable nginx.service
 systemctl enable dnsmasq.service
 systemctl enable nftables.service
 systemctl enable wifi-gpio.service
+pip3 install --break-system-packages luma.oled
+systemctl enable oled-status.service

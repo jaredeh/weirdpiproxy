@@ -1,12 +1,13 @@
 [Unit]
-Description=OpenSSH Gateway (PDU proxy on eth0:22)
+Description=OLED network status display
 After=network-online.target
 Wants=network-online.target
 
 [Service]
-ExecStart=/usr/sbin/sshd -D -f /etc/ssh/sshd_config_gateway
+Type=simple
+ExecStart=/usr/bin/python3 /usr/local/bin/oled-status.py
 Restart=on-failure
-RestartSec=5
+RestartSec=10
 
 [Install]
 WantedBy=multi-user.target

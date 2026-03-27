@@ -1,4 +1,7 @@
+.env
 config.yml
+certs/keys
+certs/certificateauthority
 certs/*.crt
 certs/*.key
 certs/*.pem

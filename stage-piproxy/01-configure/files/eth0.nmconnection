@@ -1,0 +1,12 @@
+[connection]
+id=eth0-static
+type=ethernet
+interface-name=eth0
+autoconnect=true
+
+[ipv4]
+method=manual
+addresses=%%ETH0_IP%%/%%ETH0_CIDR%%
+
+[ipv6]
+method=disabled

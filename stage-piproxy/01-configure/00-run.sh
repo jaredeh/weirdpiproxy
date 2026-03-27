@@ -11,6 +11,8 @@ for f in files/vlan-*.nmconnection; do
 done
 
 # --- nginx ---
+install -d "${ROOTFS_DIR}/etc/systemd/system/nginx.service.d"
+install -m 644 files/nginx-restart-override.conf "${ROOTFS_DIR}/etc/systemd/system/nginx.service.d/override.conf"
 install -d "${ROOTFS_DIR}/etc/nginx/certs"
 install -m 644 files/nginx-pdu.conf "${ROOTFS_DIR}/etc/nginx/sites-available/pdu.conf"
 install -m 600 files/server.crt "${ROOTFS_DIR}/etc/nginx/certs/server.crt"
@@ -24,8 +26,8 @@ install -m 755 files/ssh-bridge.sh "${ROOTFS_DIR}/usr/local/bin/ssh-bridge.sh"
 install -m 644 files/sshd-gateway.service "${ROOTFS_DIR}/etc/systemd/system/sshd-gateway.service"
 
 # --- SSH management (all interfaces:2222 → Pi shell) ---
+# Overwrites default sshd_config — the default ssh.service uses this
 install -m 644 files/sshd_management_config "${ROOTFS_DIR}/etc/ssh/sshd_config"
-install -m 644 files/sshd-management.service "${ROOTFS_DIR}/etc/systemd/system/sshd-management.service"
 
 # --- dnsmasq (DHCP on eth1) ---
 install -m 644 files/dnsmasq.conf "${ROOTFS_DIR}/etc/dnsmasq.conf"
@@ -38,6 +40,17 @@ install -m 644 files/wifi-gpio.service "${ROOTFS_DIR}/etc/systemd/system/wifi-gp
 # --- WiFi (NetworkManager connection) ---
 install -m 600 files/wifi.nmconnection "${ROOTFS_DIR}/etc/NetworkManager/system-connections/piproxy-wifi.nmconnection"
 
+# --- OLED status display ---
+install -m 755 files/oled-status.py "${ROOTFS_DIR}/usr/local/bin/oled-status.py"
+install -m 644 files/oled-status.service "${ROOTFS_DIR}/etc/systemd/system/oled-status.service"
+
+# Enable I2C interface
+grep -qxF "dtparam=i2c_arm=on" "${ROOTFS_DIR}/boot/firmware/config.txt" 2>/dev/null \
+    || echo "dtparam=i2c_arm=on" >> "${ROOTFS_DIR}/boot/firmware/config.txt"
+grep -qxF "i2c-dev" "${ROOTFS_DIR}/etc/modules" 2>/dev/null \
+    || echo "i2c-dev" >> "${ROOTFS_DIR}/etc/modules"
+
 # --- Firewall ---
 install -m 644 files/nftables.conf "${ROOTFS_DIR}/etc/nftables.conf"
 
+cp "${ROOTFS_DIR}/etc/nginx/sites-available/pdu.conf"  files/flarp.conf
