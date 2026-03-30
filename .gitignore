@@ -7,5 +7,6 @@ certs/*.key
 certs/*.pem
 pi-gen/
 build/
+mnt/
 *.img
 *.zip

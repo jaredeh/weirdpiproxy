@@ -325,11 +325,55 @@ distclean() {
     echo "Done."
 }
 
+# --- Mount ---
+mount_image() {
+    local img
+    img=$(ls -t "${SCRIPT_DIR}"/piproxy-*.img 2>/dev/null | head -n 1)
+    if [ -z "$img" ]; then
+        echo "ERROR: No piproxy-*.img found"
+        exit 1
+    fi
+
+    local mnt="${SCRIPT_DIR}/mnt"
+    mkdir -p "$mnt"
+
+    local loop
+    loop=$(sudo losetup --find --show --partscan "$img")
+    echo "Attached $img to $loop"
+
+    # Mount the root partition (partition 2)
+    sudo mount "${loop}p2" "$mnt"
+    sudo mount "${loop}p1" "$mnt/boot/firmware"
+    echo "Mounted at $mnt"
+    echo "To unmount: $0 umount"
+}
+
+# --- Unmount ---
+umount_image() {
+    local mnt="${SCRIPT_DIR}/mnt"
+    if ! mountpoint -q "$mnt" 2>/dev/null; then
+        echo "ERROR: $mnt is not mounted"
+        exit 1
+    fi
+
+    sudo umount "$mnt/boot/firmware" 2>/dev/null || true
+    sudo umount "$mnt"
+
+    # Detach any loop devices pointing at our images
+    for loop in $(losetup -j "${SCRIPT_DIR}"/piproxy-*.img 2>/dev/null | cut -d: -f1); do
+        sudo losetup -d "$loop"
+        echo "Detached $loop"
+    done
+    echo "Unmounted $mnt"
+}
+
 # --- Main ---
 main() {
     case "${1:-}" in
         clean) clean; exit 0 ;;
         distclean) distclean; exit 0 ;;
+        mount) mount_image; exit 0 ;;
+        umount|unmount) umount_image; exit 0 ;;
     esac
 
     # Check for block device argument
