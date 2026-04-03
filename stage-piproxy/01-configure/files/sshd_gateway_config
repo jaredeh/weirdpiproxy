@@ -4,17 +4,21 @@ ListenAddress %%ETH0_IP%%
 %%VLAN_SSHD_LISTEN%%
 
 PermitRootLogin no
+PasswordAuthentication yes
 PubkeyAuthentication yes
-PasswordAuthentication no
-
 AuthorizedKeysFile .ssh/authorized_keys
 
 ForceCommand /usr/local/bin/ssh-bridge.sh
+PermitTTY yes
 
 PidFile /run/sshd_gateway.pid
 HostKey /etc/ssh/ssh_host_ed25519_key
 HostKey /etc/ssh/ssh_host_rsa_key
 
-UsePAM yes
+UsePAM no
 PrintMotd no
+PrintLastLog no
+Banner none
+ClientAliveInterval 5
+ClientAliveCountMax 1
 AcceptEnv LANG LC_*

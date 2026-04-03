@@ -120,7 +120,7 @@ process_templates() {
     cp "${SCRIPT_DIR}/${TLS_KEY_PATH}" "${BUILD_STAGE_DIR}/01-configure/files/server.key"
 
     # Generate VLAN config snippets
-    local vlan_nginx="" vlan_nginx_http="" vlan_sshd="" vlan_nftables=""
+    local vlan_sshd="" vlan_nftables=""
     local vlan_count
     vlan_count=$(yq -r '.eth0_vlans | length // 0' "$CONFIG_FILE" 2>/dev/null || echo 0)
 
@@ -151,8 +151,6 @@ addresses=${ip}/${cidr}
 method=disabled
 VLANEOF
 
-            vlan_nginx+="    listen ${ip}:443 ssl;\n"
-            vlan_nginx_http+="    listen ${ip}:80;\n"
             vlan_sshd+="ListenAddress ${ip}\n"
             vlan_nftables+="        iifname \"eth0.${vid}\" tcp dport 80 accept\n"
             vlan_nftables+="        iifname \"eth0.${vid}\" tcp dport 443 accept\n"
@@ -201,8 +199,6 @@ VLANEOF
             else { print }
         }' "$file" > "$tmpfile" && mv "$tmpfile" "$file"
     }
-    replace_placeholder "${files_dir}/nginx-pdu.conf" "%%VLAN_NGINX_LISTEN_HTTP%%" "$(echo -e "$vlan_nginx_http")"
-    replace_placeholder "${files_dir}/nginx-pdu.conf" "%%VLAN_NGINX_LISTEN%%" "$(echo -e "$vlan_nginx")"
     replace_placeholder "${files_dir}/sshd_gateway_config" "%%VLAN_SSHD_LISTEN%%" "$(echo -e "$vlan_sshd")"
     replace_placeholder "${files_dir}/nftables.conf" "%%VLAN_NFTABLES%%" "$(echo -e "$vlan_nftables")"
 }

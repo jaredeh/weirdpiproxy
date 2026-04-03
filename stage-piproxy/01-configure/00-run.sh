@@ -23,6 +23,7 @@ rm -f "${ROOTFS_DIR}/etc/nginx/sites-enabled/default"
 # --- SSH gateway (eth0:22 → PDU) ---
 install -m 644 files/sshd_gateway_config "${ROOTFS_DIR}/etc/ssh/sshd_config_gateway"
 install -m 755 files/ssh-bridge.sh "${ROOTFS_DIR}/usr/local/bin/ssh-bridge.sh"
+install -m 755 files/pdu-askpass.sh "${ROOTFS_DIR}/usr/local/bin/pdu-askpass.sh"
 install -m 644 files/sshd-gateway.service "${ROOTFS_DIR}/etc/systemd/system/sshd-gateway.service"
 
 # --- SSH management (all interfaces:2222 → Pi shell) ---
